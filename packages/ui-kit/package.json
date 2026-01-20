@@ -1,0 +1,27 @@
+{
+  "name": "@ancore/ui-kit",
+  "version": "0.1.0",
+  "description": "Shared UI components for Ancore",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["ancore", "ui", "components", "react"],
+  "author": "Ancore Contributors",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.0",
+    "react": "^18.2.0"
+  }
+}

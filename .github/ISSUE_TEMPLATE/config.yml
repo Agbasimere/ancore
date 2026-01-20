@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security Vulnerability
+    url: https://t.me/+OqlAx-gQx3M4YzJk
+    about: Report security issues privately via Telegram (DO NOT open public issues)
+  - name: 💬 Telegram Community
+    url: https://t.me/+OqlAx-gQx3M4YzJk
+    about: Ask questions and discuss with the community

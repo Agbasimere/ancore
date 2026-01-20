@@ -1,0 +1,48 @@
+{
+  "name": "@ancore/core-sdk",
+  "version": "0.1.0",
+  "description": "Core SDK for building on Ancore",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "jest",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ancore",
+    "stellar",
+    "soroban",
+    "account-abstraction",
+    "smart-wallet"
+  ],
+  "author": "Ancore Contributors",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ancore-org/ancore.git",
+    "directory": "packages/core-sdk"
+  },
+  "dependencies": {
+    "@ancore/types": "workspace:*",
+    "@ancore/account-abstraction": "workspace:*",
+    "@ancore/stellar": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.0",
+    "jest": "^29.7.0",
+    "eslint": "^8.56.0"
+  }
+}

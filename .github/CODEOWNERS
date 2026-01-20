@@ -1,0 +1,103 @@
+# CODEOWNERS
+# 
+# This file defines who must review code changes in different parts of the codebase.
+# More specific patterns override general ones.
+#
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default: Core team reviews everything
+* @ancore/core-team
+
+# ============================================================================
+# HIGH SECURITY - Requires core team + security review
+# ============================================================================
+
+# Smart Contracts - Critical security boundary
+/contracts/ @ancore/contract-team @ancore/security-team
+/contracts/account/ @ancore/contract-team @ancore/security-team
+/contracts/validation-modules/ @ancore/contract-team @ancore/security-team
+/contracts/upgrade/ @ancore/contract-team @ancore/security-team
+
+# Cryptographic operations - Must be reviewed by security team
+/packages/crypto/ @ancore/security-team @ancore/core-team
+
+# Account abstraction core logic - Security critical
+/packages/account-abstraction/ @ancore/security-team @ancore/sdk-team
+
+# ============================================================================
+# MEDIUM RISK - Requires experienced reviewers
+# ============================================================================
+
+# Core SDK - Public API, needs careful review
+/packages/core-sdk/ @ancore/sdk-team
+
+# Stellar integration - Network-critical code
+/packages/stellar/ @ancore/sdk-team
+
+# Type definitions - Breaking changes impact all packages
+/packages/types/ @ancore/sdk-team
+
+# Services - Backend infrastructure
+/services/relayer/ @ancore/infrastructure-team
+/services/indexer/ @ancore/infrastructure-team
+/services/ai-agent/ @ancore/infrastructure-team @ancore/sdk-team
+
+# ============================================================================
+# LOW RISK - Standard review process
+# ============================================================================
+
+# Wallet applications - UI focused, less security critical
+/apps/extension-wallet/ @ancore/wallet-team
+/apps/mobile-wallet/ @ancore/wallet-team
+/apps/web-dashboard/ @ancore/wallet-team
+
+# UI Kit - Presentational components
+/packages/ui-kit/ @ancore/wallet-team
+
+# Documentation - Community contributions welcome
+/docs/ @ancore/core-team
+
+# ============================================================================
+# INFRASTRUCTURE & GOVERNANCE
+# ============================================================================
+
+# CI/CD pipelines - Infrastructure team
+/.github/workflows/ @ancore/infrastructure-team @ancore/core-team
+
+# Security policies - Security team
+/SECURITY.md @ancore/security-team @ancore/core-team
+/.github/SECURITY.md @ancore/security-team @ancore/core-team
+
+# Governance documents - Core team
+/MAINTAINERS.md @ancore/core-team
+/RFC.md @ancore/core-team
+/CONTRIBUTING.md @ancore/core-team
+
+# License files - Legal review required
+/LICENSE* @ancore/core-team
+
+# Package configuration - Can affect all packages
+/package.json @ancore/core-team
+/turbo.json @ancore/infrastructure-team
+/pnpm-workspace.yaml @ancore/infrastructure-team
+
+# Root configuration files
+/.gitignore @ancore/infrastructure-team
+/.prettierrc.json @ancore/core-team
+/tsconfig.json @ancore/sdk-team
+
+# ============================================================================
+# NOTES
+# ============================================================================
+#
+# Teams (to be created in GitHub):
+#
+# @ancore/core-team - Overall project leadership
+# @ancore/security-team - Security reviews
+# @ancore/contract-team - Smart contract development
+# @ancore/sdk-team - SDK and developer experience
+# @ancore/wallet-team - Wallet applications
+# @ancore/infrastructure-team - CI/CD and services
+#
+# During bootstrap phase, all teams may be the same people.
+# Expand teams as the project grows.

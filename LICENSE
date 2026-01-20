@@ -1,0 +1,42 @@
+# License
+
+This repository contains multiple components under different licenses:
+
+## Apache License 2.0
+
+The following components are licensed under the Apache License 2.0 (see LICENSE-APACHE):
+
+- Smart contracts (`contracts/`)
+- Core SDK (`packages/core-sdk/`)
+- Account abstraction (`packages/account-abstraction/`)
+- Stellar utilities (`packages/stellar/`)
+- Cryptographic utilities (`packages/crypto/`)
+- Shared types (`packages/types/`)
+
+## MIT License
+
+The following components are licensed under the MIT License (see LICENSE-MIT):
+
+- Extension wallet (`apps/extension-wallet/`)
+- Mobile wallet (`apps/mobile-wallet/`)
+- Web dashboard (`apps/web-dashboard/`)
+- UI components (`packages/ui-kit/`)
+- Infrastructure services (`services/`)
+
+## Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Documentation in the `docs/` directory is licensed under CC BY 4.0.
+
+---
+
+## Why Multiple Licenses?
+
+- **Apache 2.0** provides patent protection and is preferred for core infrastructure and SDKs
+- **MIT** is simpler and more permissive, suitable for application code and UI components
+- **CC BY 4.0** is appropriate for documentation
+
+## Contributing
+
+By submitting a contribution, you agree to license your contribution under the same license as the component you're contributing to.
+
+See CONTRIBUTING.md for details.
