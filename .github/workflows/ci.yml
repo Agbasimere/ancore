@@ -98,17 +98,16 @@ jobs:
       - name: Add wasm32 target
         run: rustup target add wasm32-unknown-unknown
 
-      - name: Install system dependencies for Soroban CLI
+      - name: Install Stellar CLI
         run: |
-          sudo apt-get update
-          sudo apt-get install -y pkg-config libdbus-1-dev libudev-dev
-
-      - name: Install Soroban CLI
-        run: cargo install --locked soroban-cli
+          mkdir -p ~/.local/bin
+          curl -L https://github.com/stellar/stellar-cli/releases/download/v22.0.1/stellar-cli-22.0.1-x86_64-unknown-linux-gnu.tar.gz | tar xz -C ~/.local/bin
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          stellar version
 
       - name: Build contracts
         working-directory: ./contracts
-        run: cargo build --target wasm32-unknown-unknown --release
+        run: stellar contract build
 
       - name: Test contracts
         working-directory: ./contracts
