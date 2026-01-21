@@ -90,6 +90,11 @@ jobs:
       - name: Add wasm32 target
         run: rustup target add wasm32-unknown-unknown
 
+      - name: Install system dependencies for Soroban CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libdbus-1-dev
+
       - name: Install Soroban CLI
         run: cargo install --locked soroban-cli
 
