@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "🔨 Running build..."
 pnpm build || {
   echo "❌ Build failed. Please fix build errors before pushing."
