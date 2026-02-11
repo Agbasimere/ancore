@@ -1,11 +1,22 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { AddressDisplay } from './address-display';
 
 const sampleAddress = 'GCZJM35NKGVK47BB4SPBDV25477PZYIYPVVG453LPYFNXLS3FGHDXOCM';
 
 describe('AddressDisplay', () => {
+  beforeEach(() => {
+    // Mock clipboard API
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+      writable: true,
+      configurable: true,
+    });
+  });
+
   it('renders address with truncation', () => {
     render(<AddressDisplay address={sampleAddress} />);
     expect(screen.getByText(/GCZJM3...HDXOCM/)).toBeInTheDocument();
@@ -36,13 +47,7 @@ describe('AddressDisplay', () => {
 
   it('handles copy to clipboard', async () => {
     const user = userEvent.setup();
-    
-    // Mock clipboard API
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: vi.fn().mockResolvedValue(undefined),
-      },
-    });
+    const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText');
 
     render(<AddressDisplay address={sampleAddress} />);
     const copyButton = screen.getByLabelText('Copy address');
@@ -50,12 +55,13 @@ describe('AddressDisplay', () => {
     await user.click(copyButton);
     
     await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(sampleAddress);
+      expect(writeTextSpy).toHaveBeenCalledWith(sampleAddress);
     });
   });
 
   it('respects custom truncation length', () => {
     render(<AddressDisplay address={sampleAddress} truncate={10} />);
-    expect(screen.getByText(/GCZJM35NKG...3FGHDXOCM/)).toBeInTheDocument();
+    // With truncate=10, we show 10 characters at start and end
+    expect(screen.getByText(/GCZJM35NKG...S3FGHDXOCM/)).toBeInTheDocument();
   });
 });

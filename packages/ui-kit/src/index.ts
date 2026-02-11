@@ -5,9 +5,6 @@
 
 export const UI_KIT_VERSION = '0.1.0';
 
-// Export styles (consumers need to import this in their app)
-export * from './styles/globals.css';
-
 // Core shadcn/ui components
 export { Button, buttonVariants } from './components/ui/button';
 export type { ButtonProps } from './components/ui/button';
