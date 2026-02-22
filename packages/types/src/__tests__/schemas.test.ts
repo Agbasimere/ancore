@@ -30,7 +30,11 @@ describe('schemas', () => {
   });
 
   test('SessionKeySchema rejects bad permissions', () => {
-    const key = { publicKey: 'G' + 'A'.repeat(55), permissions: [99], expiresAt: Date.now() + 1000 };
+    const key = {
+      publicKey: 'G' + 'A'.repeat(55),
+      permissions: [99],
+      expiresAt: Date.now() + 1000,
+    };
     expect(() => SessionKeySchema.parse(key)).toThrow();
   });
 });
