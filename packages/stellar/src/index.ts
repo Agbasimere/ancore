@@ -3,10 +3,21 @@
  * Stellar network integration utilities
  */
 
-// Placeholder export - implement as package develops
 export const STELLAR_VERSION = '0.1.0';
 
-// Example exports (implement as needed):
-// export { StellarClient } from './client';
-// export { buildTransaction } from './transactions';
-// export { submitOperation } from './operations';
+// Client
+export { StellarClient } from './client';
+export type { StellarClientConfig, Balance } from './client';
+
+// Errors
+export {
+  StellarError,
+  NetworkError,
+  AccountNotFoundError,
+  TransactionError,
+  RetryExhaustedError,
+} from './errors';
+
+// Retry utilities
+export { withRetry, calculateDelay } from './retry';
+export type { RetryOptions } from './retry';
