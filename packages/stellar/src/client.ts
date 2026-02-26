@@ -1,0 +1,280 @@
+/**
+ * StellarClient - Network client for Stellar blockchain interactions
+ */
+
+import { rpc as StellarRpc, Horizon } from '@stellar/stellar-sdk';
+import type { Transaction } from '@stellar/stellar-sdk';
+import type { Network, NetworkConfig } from '@ancore/types';
+import {
+  NetworkError,
+  AccountNotFoundError,
+  TransactionError,
+  RetryExhaustedError,
+} from './errors';
+import { withRetry, type RetryOptions } from './retry';
+
+const NETWORK_CONFIG: Record<
+  Network,
+  { rpcUrl: string; horizonUrl: string; networkPassphrase: string }
+> = {
+  testnet: {
+    rpcUrl: 'https://soroban-testnet.stellar.org',
+    horizonUrl: 'https://horizon-testnet.stellar.org',
+    networkPassphrase: 'Test SDF Network ; September 2015',
+  },
+  mainnet: {
+    rpcUrl: 'https://soroban.stellar.org',
+    horizonUrl: 'https://horizon.stellar.org',
+    networkPassphrase: 'Public Global Stellar Network ; September 2015',
+  },
+  local: {
+    rpcUrl: 'http://localhost:8000/soroban/rpc',
+    horizonUrl: 'http://localhost:8000',
+    networkPassphrase: 'Standalone Network ; February 2017',
+  },
+};
+
+const FRIENDBOT_URL = 'https://friendbot.stellar.org';
+
+export interface Balance {
+  asset: string;
+  balance: string;
+  assetType: string;
+  assetCode?: string;
+  assetIssuer?: string;
+}
+
+export interface StellarClientConfig extends NetworkConfig {
+  /** Custom retry options for network requests */
+  retryOptions?: RetryOptions;
+}
+
+/**
+ * StellarClient provides methods for interacting with the Stellar network
+ *
+ * @example
+ * ```typescript
+ * const client = new StellarClient({ network: 'testnet' });
+ * const account = await client.getAccount('GABC...');
+ * const balances = await client.getBalances('GABC...');
+ * ```
+ */
+export class StellarClient {
+  private readonly rpcServer: StellarRpc.Server;
+  private readonly horizonServer: Horizon.Server;
+  private readonly networkPassphrase: string;
+  private readonly network: Network;
+  private readonly retryOptions: RetryOptions;
+
+  constructor(config: StellarClientConfig) {
+    this.network = config.network;
+
+    const networkConfig = NETWORK_CONFIG[config.network];
+    const rpcUrl = config.rpcUrl ?? networkConfig.rpcUrl;
+    const horizonUrl = networkConfig.horizonUrl;
+    this.networkPassphrase = config.networkPassphrase ?? networkConfig.networkPassphrase;
+
+    this.rpcServer = new StellarRpc.Server(rpcUrl);
+    this.horizonServer = new Horizon.Server(horizonUrl);
+    this.retryOptions = config.retryOptions ?? {
+      maxRetries: 3,
+      baseDelayMs: 1000,
+      exponential: true,
+    };
+  }
+
+  /**
+   * Get the network passphrase
+   */
+  getNetworkPassphrase(): string {
+    return this.networkPassphrase;
+  }
+
+  /**
+   * Get the current network
+   */
+  getNetwork(): Network {
+    return this.network;
+  }
+
+  /**
+   * Load an account from the network
+   *
+   * @param publicKey - The public key of the account to load
+   * @returns The account data from the network
+   * @throws AccountNotFoundError if the account doesn't exist
+   * @throws NetworkError if the network request fails
+   */
+  async getAccount(publicKey: string): Promise<Horizon.AccountResponse> {
+    try {
+      return await withRetry(
+        async () => {
+          try {
+            const account = await this.horizonServer.loadAccount(publicKey);
+            return account;
+          } catch (error) {
+            if (error instanceof Error && error.message.includes('Not Found')) {
+              throw new AccountNotFoundError(publicKey);
+            }
+            throw new NetworkError('Failed to load account', {
+              cause: error instanceof Error ? error : undefined,
+            });
+          }
+        },
+        {
+          ...this.retryOptions,
+          isRetryable: (error) => !(error instanceof AccountNotFoundError),
+        }
+      );
+    } catch (error: unknown) {
+      // If retry exhausted, throw the last error if it's one of our custom errors
+      if (error instanceof RetryExhaustedError && error.lastError) {
+        if (
+          error.lastError instanceof AccountNotFoundError ||
+          error.lastError instanceof NetworkError
+        ) {
+          throw error.lastError;
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Get balances for an account
+   *
+   * @param publicKey - The public key of the account
+   * @returns Array of balances including XLM and tokens
+   * @throws AccountNotFoundError if the account doesn't exist
+   * @throws NetworkError if the network request fails
+   */
+  async getBalances(publicKey: string): Promise<Balance[]> {
+    const account = await this.getAccount(publicKey);
+
+    return account.balances.map((balance) => {
+      if (balance.asset_type === 'native') {
+        return {
+          asset: 'XLM',
+          balance: balance.balance,
+          assetType: 'native',
+        };
+      }
+
+      const creditBalance = balance as Horizon.HorizonApi.BalanceLineAsset;
+      return {
+        asset: `${creditBalance.asset_code}:${creditBalance.asset_issuer}`,
+        balance: creditBalance.balance,
+        assetType: creditBalance.asset_type,
+        assetCode: creditBalance.asset_code,
+        assetIssuer: creditBalance.asset_issuer,
+      };
+    });
+  }
+
+  /**
+   * Submit a signed transaction to the network
+   *
+   * @param transaction - The signed transaction to submit
+   * @returns The transaction response from the network
+   * @throws TransactionError if the transaction fails
+   * @throws NetworkError if the network request fails
+   */
+  async submitTransaction(
+    transaction: Transaction
+  ): Promise<Horizon.HorizonApi.SubmitTransactionResponse> {
+    try {
+      return await withRetry(async () => {
+        try {
+          const response = await this.horizonServer.submitTransaction(transaction);
+          return response;
+        } catch (error) {
+          if (
+            error &&
+            typeof error === 'object' &&
+            'response' in error &&
+            error.response &&
+            typeof error.response === 'object' &&
+            'data' in error.response
+          ) {
+            const data = error.response.data as {
+              extras?: { result_codes?: { transaction?: string } };
+            };
+            throw new TransactionError('Transaction submission failed', {
+              resultCode: data?.extras?.result_codes?.transaction,
+            });
+          }
+          throw new NetworkError('Failed to submit transaction', {
+            cause: error instanceof Error ? error : undefined,
+          });
+        }
+      }, this.retryOptions);
+    } catch (error: unknown) {
+      if (error instanceof RetryExhaustedError && error.lastError) {
+        if (
+          error.lastError instanceof TransactionError ||
+          error.lastError instanceof NetworkError
+        ) {
+          throw error.lastError;
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Fund an account using Friendbot (testnet only)
+   *
+   * @param publicKey - The public key of the account to fund
+   * @returns True if funding was successful
+   * @throws NetworkError if not on testnet or if the request fails
+   */
+  async fundWithFriendbot(publicKey: string): Promise<boolean> {
+    if (this.network !== 'testnet') {
+      throw new NetworkError('Friendbot is only available on testnet');
+    }
+
+    try {
+      return await withRetry(async () => {
+        try {
+          const response = await fetch(`${FRIENDBOT_URL}?addr=${encodeURIComponent(publicKey)}`);
+
+          if (!response.ok) {
+            throw new NetworkError('Friendbot request failed', {
+              statusCode: response.status,
+            });
+          }
+
+          return true;
+        } catch (error) {
+          if (error instanceof NetworkError) {
+            throw error;
+          }
+          throw new NetworkError('Failed to fund account with Friendbot', {
+            cause: error instanceof Error ? error : undefined,
+          });
+        }
+      }, this.retryOptions);
+    } catch (error: unknown) {
+      if (error instanceof RetryExhaustedError && error.lastError) {
+        if (error.lastError instanceof NetworkError) {
+          throw error.lastError;
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Check if the network is healthy
+   *
+   * @returns True if the network is reachable
+   */
+  async isHealthy(): Promise<boolean> {
+    try {
+      await this.rpcServer.getHealth();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
