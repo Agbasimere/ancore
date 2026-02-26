@@ -3,10 +3,28 @@
  * Core SDK for Ancore wallet integration
  */
 
-// Placeholder export - implement as package develops
 export const SDK_VERSION = '0.1.0';
 
-// Example exports (implement as needed):
-// export { AncoreClient } from './client';
-// export { Wallet } from './wallet';
-// export { Transaction } from './transaction';
+// Account transaction builder (wrapper around Stellar SDK's TransactionBuilder)
+export {
+  AccountTransactionBuilder,
+  type AccountTransactionBuilderOptions,
+} from './account-transaction-builder';
+
+// Contract parameter encoding helpers
+export {
+  toScAddress,
+  toScU64,
+  toScU32,
+  toScPermissionsVec,
+  toScOperationsVec,
+} from './contract-params';
+
+// Error types
+export {
+  AncoreSdkError,
+  SimulationFailedError,
+  SimulationExpiredError,
+  BuilderValidationError,
+  TransactionSubmissionError,
+} from './errors';
