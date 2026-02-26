@@ -6,11 +6,11 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "test": "echo 'No tests yet'",
-    "lint": "eslint src/",
-    "clean": "rm -rf dist"
+  "build": "tsup src/index.ts --format cjs,esm --dts --tsconfig tsconfig.json",
+  "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+  "test": "jest",
+  "lint": "eslint src/",
+  "clean": "rm -rf dist"
   },
   "keywords": [
     "ancore",
@@ -21,7 +21,9 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@ancore/types": "workspace:*",
-    "@ancore/crypto": "workspace:*"
+    "@ancore/crypto": "workspace:*",
+    "@ancore/stellar": "workspace:*",
+    "@stellar/stellar-sdk": "^13.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
@@ -30,6 +32,8 @@
     "eslint": "^9.0.0",
     "jest": "^30.2.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "ts-jest": "^29.2.0",
+    "@types/jest": "^29.5.0"
   }
 }
