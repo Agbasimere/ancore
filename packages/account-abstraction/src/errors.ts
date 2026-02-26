@@ -42,6 +42,18 @@ export class NotInitializedError extends AccountContractError {
 }
 
 /**
+ * Thrown when execute() is called with a nonce that does not match the current nonce.
+ * Maps to contract panic: "Invalid nonce"
+ */
+export class InvalidNonceError extends AccountContractError {
+  constructor(message: string = 'Invalid nonce (replay or stale)') {
+    super(message, 'INVALID_NONCE');
+    this.name = 'InvalidNonceError';
+    Object.setPrototypeOf(this, InvalidNonceError.prototype);
+  }
+}
+
+/**
  * Thrown when the caller is not the owner (e.g. add_session_key without auth).
  * Maps to Soroban auth failure from require_auth().
  */
@@ -85,6 +97,7 @@ export class ContractInvocationError extends AccountContractError {
 export const CONTRACT_ERROR_MESSAGES = {
   ALREADY_INITIALIZED: 'Already initialized',
   NOT_INITIALIZED: 'Not initialized',
+  INVALID_NONCE: 'Invalid nonce',
 } as const;
 
 /**
@@ -96,6 +109,9 @@ export function mapContractError(message: string, raw?: unknown): AccountContrac
   }
   if (message.includes(CONTRACT_ERROR_MESSAGES.NOT_INITIALIZED)) {
     return new NotInitializedError();
+  }
+  if (message.includes(CONTRACT_ERROR_MESSAGES.INVALID_NONCE)) {
+    return new InvalidNonceError(message);
   }
   if (
     typeof message === 'string' &&

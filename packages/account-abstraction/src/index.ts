@@ -16,6 +16,7 @@ export {
   AccountContractError,
   AlreadyInitializedError,
   NotInitializedError,
+  InvalidNonceError,
   UnauthorizedError,
   SessionKeyNotFoundError,
   ContractInvocationError,

@@ -64,12 +64,14 @@ export class AccountContract {
   }
 
   /**
-   * Build invocation for execute(to, function, args).
+   * Build invocation for execute(to, function, args, expected_nonce).
+   * Caller must pass the current nonce (e.g. from getNonce()) for replay protection.
    */
   execute(
     to: string,
     fn: string,
-    args: xdr.ScVal[]
+    args: xdr.ScVal[],
+    expectedNonce: number
   ): InvocationArgs {
     return {
       method: 'execute',
@@ -77,6 +79,7 @@ export class AccountContract {
         addressToScVal(to),
         symbolToScVal(fn),
         xdr.ScVal.scvVec(args),
+        u64ToScVal(expectedNonce),
       ],
     };
   }
