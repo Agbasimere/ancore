@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "tsup src/index.ts --format cjs,esm --dts --tsconfig tsconfig.json",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "test": "jest --coverage",
     "lint": "eslint src/",
@@ -34,7 +34,7 @@
     "tsup": "^8.0.0",
     "typescript": "^5.6.0",
     "jest": "^30.2.0",
-    "ts-jest": "^30.0.0",
+    "ts-jest": "^29.4.6",
     "@types/jest": "^29.5.0"
   },
   "dependencies": {

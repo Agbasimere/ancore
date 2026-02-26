@@ -44,7 +44,8 @@
   "pnpm": {
     "overrides": {
       "js-yaml": ">=4.1.1",
-      "tmp": ">=0.2.4"
+      "tmp": ">=0.2.4",
+      "esbuild": "0.21.5"
     }
   },
   "packageManager": "pnpm@9.0.0",

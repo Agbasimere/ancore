@@ -1,12 +1,37 @@
 /**
  * @ancore/account-abstraction
- * Account abstraction layer for Stellar smart contracts
+ * Account abstraction layer for Stellar smart contracts.
+ * Provides AccountContract for invoking the Ancore account contract.
  */
 
-// Placeholder export - implement as package develops
 export const AA_VERSION = '0.1.0';
 
-// Example exports (implement as needed):
-// export { AccountFactory } from './factory';
-// export { SmartAccount } from './account';
-// export { executeUserOp } from './operations';
+export { AccountContract } from './account-contract';
+export type {
+  AccountContractReadOptions,
+  InvocationArgs,
+} from './account-contract';
+
+export {
+  AccountContractError,
+  AlreadyInitializedError,
+  NotInitializedError,
+  UnauthorizedError,
+  SessionKeyNotFoundError,
+  ContractInvocationError,
+  mapContractError,
+  CONTRACT_ERROR_MESSAGES,
+} from './errors';
+
+export {
+  addressToScVal,
+  publicKeyToBytes32ScVal,
+  u64ToScVal,
+  permissionsToScVal,
+  symbolToScVal,
+  scValToAddress,
+  scValToU64,
+  bytes32ScValToPublicKey,
+  scValToSessionKey,
+  scValToOptionalSessionKey,
+} from './xdr-utils';
