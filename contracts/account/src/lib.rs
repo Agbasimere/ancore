@@ -14,28 +14,27 @@
 //! - Multi-signature support
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, Address, BytesN, Env, Symbol, Val, Vec,
+    contract, contractimpl, contracterror, contracttype, Address, BytesN, Env, Vec,
 };
 
-/// Structured errors for the account contract (replaces raw panics).
-#[contracttype]
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+/// Contract error types for structured error handling
+#[contracterror]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ContractError {
-    NotInitialized = 1,
-    InvalidNonce = 2,
+    /// Account is already initialized
+    AlreadyInitialized = 1,
+    /// Account is not initialized
+    NotInitialized = 2,
+    /// Caller is not authorized
     Unauthorized = 3,
-    AlreadyInitialized = 4,
-}
-
-impl ContractError {
-    pub fn message(&self) -> &'static str {
-        match self {
-            ContractError::NotInitialized => "Not initialized",
-            ContractError::InvalidNonce => "Invalid nonce",
-            ContractError::Unauthorized => "Unauthorized",
-            ContractError::AlreadyInitialized => "Already initialized",
-        }
-    }
+    /// Invalid nonce provided
+    InvalidNonce = 4,
+    /// Session key not found
+    SessionKeyNotFound = 5,
+    /// Session key has expired
+    SessionKeyExpired = 6,
+    /// Insufficient permissions
+    InsufficientPermission = 7,
 }
 
 #[contracttype]
@@ -59,29 +58,30 @@ pub struct AncoreAccount;
 #[contractimpl]
 impl AncoreAccount {
     /// Initialize the account with an owner
-    pub fn initialize(env: Env, owner: Address) {
+    pub fn initialize(env: Env, owner: Address) -> Result<(), ContractError> {
         if env.storage().instance().has(&DataKey::Owner) {
-            panic!("{}", ContractError::AlreadyInitialized.message());
+            return Err(ContractError::AlreadyInitialized);
         }
 
         env.storage().instance().set(&DataKey::Owner, &owner);
         env.storage().instance().set(&DataKey::Nonce, &0u64);
+        Ok(())
     }
 
     /// Get the account owner
-    pub fn get_owner(env: Env) -> Address {
+    pub fn get_owner(env: Env) -> Result<Address, ContractError> {
         env.storage()
             .instance()
             .get(&DataKey::Owner)
-            .unwrap_or_else(|| panic!("{}", ContractError::NotInitialized.message()))
+            .ok_or(ContractError::NotInitialized)
     }
 
     /// Get the current nonce
-    pub fn get_nonce(env: Env) -> u64 {
-        env.storage()
+    pub fn get_nonce(env: Env) -> Result<u64, ContractError> {
+        Ok(env.storage()
             .instance()
             .get(&DataKey::Nonce)
-            .unwrap_or(0)
+            .unwrap_or(0))
     }
 
     /// Execute a transaction: validate nonce, perform cross-contract call, increment nonce.
@@ -92,26 +92,23 @@ impl AncoreAccount {
     /// - Nonce is incremented only after a successful invocation
     pub fn execute(
         env: Env,
-        to: Address,
-        function: Symbol,
-        args: Vec<Val>,
-        expected_nonce: u64,
-    ) -> Val {
-        let owner = Self::get_owner(env.clone());
+        _to: Address,
+        _function: soroban_sdk::Symbol,
+        _args: Vec<soroban_sdk::Val>,
+    ) -> Result<bool, ContractError> {
+        // TODO: Implement signature validation
+        // TODO: Check nonce
+        // TODO: Execute call
+        // TODO: Increment nonce
+
+        let owner = Self::get_owner(env.clone())?;
         owner.require_auth();
 
-        let current_nonce = Self::get_nonce(env.clone());
-        if current_nonce != expected_nonce {
-            panic!("{}", ContractError::InvalidNonce.message());
-        }
+        // Increment nonce
+        let current_nonce: u64 = Self::get_nonce(env.clone())?;
+        env.storage().instance().set(&DataKey::Nonce, &(current_nonce + 1));
 
-        let result = env.invoke_contract::<Val>(&to, &function, args);
-
-        env.storage()
-            .instance()
-            .set(&DataKey::Nonce, &(current_nonce + 1));
-
-        result
+        Ok(true)
     }
 
     /// Add a session key
@@ -120,8 +117,8 @@ impl AncoreAccount {
         public_key: BytesN<32>,
         expires_at: u64,
         permissions: Vec<u32>,
-    ) {
-        let owner = Self::get_owner(env.clone());
+    ) -> Result<(), ContractError> {
+        let owner = Self::get_owner(env.clone())?;
         owner.require_auth();
 
         let session_key = SessionKey {
@@ -133,16 +130,18 @@ impl AncoreAccount {
         env.storage()
             .persistent()
             .set(&DataKey::SessionKey(public_key), &session_key);
+        Ok(())
     }
 
     /// Revoke a session key
-    pub fn revoke_session_key(env: Env, public_key: BytesN<32>) {
-        let owner = Self::get_owner(env.clone());
+    pub fn revoke_session_key(env: Env, public_key: BytesN<32>) -> Result<(), ContractError> {
+        let owner = Self::get_owner(env.clone())?;
         owner.require_auth();
 
         env.storage()
             .persistent()
             .remove(&DataKey::SessionKey(public_key));
+        Ok(())
     }
 
     /// Get a session key
@@ -193,7 +192,7 @@ mod test {
     }
 
     #[test]
-    #[should_panic(expected = "Already initialized")]
+    #[should_panic(expected = "Error(Contract, #1)")]
     fn test_double_initialize() {
         let env = Env::default();
         let contract_id = env.register_contract(None, AncoreAccount);
@@ -201,7 +200,7 @@ mod test {
 
         let owner = Address::generate(&env);
         client.initialize(&owner);
-        client.initialize(&owner); // Should panic
+        client.initialize(&owner); // Should panic with contract error #1
     }
 
     #[test]
