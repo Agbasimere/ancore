@@ -10,6 +10,7 @@ build/
 .next/
 out/
 *.tsbuildinfo
+storybook-static/
 
 # Rust/Soroban
 target/
