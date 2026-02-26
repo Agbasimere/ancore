@@ -23,3 +23,10 @@ export interface NetworkConfig {
   rpcUrl?: string;
   networkPassphrase?: string;
 }
+
+// Re-exports and custom types for account abstraction
+export * from './stellar';
+export * from './smart-account';
+export * from './session-key';
+export * from './guards';
+export * from './schemas';
